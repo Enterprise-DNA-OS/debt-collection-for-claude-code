@@ -1,0 +1,10 @@
+{
+  "_": "Rename the columns your Collect! debtor list uses. Each key is a field here; each value is one heading or a list of headings to try.",
+  "client_ref": ["File Number"],
+  "name": ["Name"],
+  "owing": ["Owing"],
+  "listed": ["Listed"],
+  "accrued": ["Delinquency Date"],
+  "last_paid": ["Last Payment Date"],
+  "state": ["State"]
+}

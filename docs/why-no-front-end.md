@@ -15,6 +15,7 @@ That layer used to be the whole product, because talking to a database was hard.
 
 - **A visual board.** Stages are a table you ask about, not cards you drag.
 - **A phone app.** It runs where Claude Code runs.
+- **A dialler and a debtor payment portal.** Collect! links to predictive diallers, texting services and a consumer portal. Here a collector dials, and payments land in your bank and are recorded. Enterprise DNA builds a portal or dialler link into a custom version when an agency needs one.
 - **A vendor help desk.** This is open source. Enterprise DNA supports the installed version for businesses that want someone to call.
 
 ## Who this fits

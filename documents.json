@@ -1,11 +1,32 @@
 [
   {
-    "name": "example",
-    "title": "TODO(author): the first document this industry must produce",
-    "for_each": "select gen_random_uuid() as id, 'Example' as name",
+    "name": "remittance-statement",
+    "title": "Remittance statement",
+    "for_each": "select r.id, r.ref || ' ' || c.code as name from remittances r join clients c on c.id = r.client_id order by r.made_on",
     "file": "name",
     "sections": [
-      { "title": "Details", "sql": "select 'replace me' as item, $1::text as record_id" }
+      { "title": "Summary", "sql": "select c.name as client, r.ref, r.period_to, r.made_on, c.currency, r.trust_cents, r.direct_cents, r.commission_cents, r.gst_cents, r.net_cents, r.reference from remittances r join clients c on c.id = r.client_id where r.id = $1" },
+      { "title": "Payments in this remittance", "note": "Direct payments went straight to you; commission on them is netted off here.", "sql": "select t.occurred_on as date, a.ref, a.client_ref, d.name as debtor, t.method, c.currency, t.amount_cents, t.commission_cents from transactions t join accounts a on a.id = t.account_id join debtors d on d.id = a.debtor_id join clients c on c.id = a.client_id where t.remittance_id = $1 order by t.occurred_on, a.ref" }
+    ]
+  },
+  {
+    "name": "client-listing",
+    "title": "Client account listing",
+    "for_each": "select id, code || ' ' || name as name from clients order by code",
+    "file": "name",
+    "sections": [
+      { "title": "Open accounts", "sql": "select b.ref, a.client_ref, b.debtor, b.status, b.currency, b.listed_cents, b.paid_cents, b.balance_cents, b.last_tried_on from v_balances b join accounts a on a.id = b.account_id where b.client_id = $1 and b.status not in ('paid','returned','closed') order by b.ref" },
+      { "title": "Closed, paid and returned", "sql": "select b.ref, a.client_ref, b.debtor, b.status, a.closed_on, b.currency, b.listed_cents, b.paid_cents, b.balance_cents from v_balances b join accounts a on a.id = b.account_id where b.client_id = $1 and b.status in ('paid','returned','closed') order by a.closed_on desc" }
+    ]
+  },
+  {
+    "name": "debtor-statement",
+    "title": "Statement of account",
+    "for_each": "select a.id, a.ref || ' ' || d.name as name from accounts a join debtors d on d.id = a.debtor_id where a.status not in ('paid','returned','closed') order by a.ref",
+    "file": "name",
+    "sections": [
+      { "title": "Account", "sql": "select a.ref, d.name as debtor, c.name as on_behalf_of, a.client_ref as their_reference, b.currency, b.balance_cents as owing_cents from accounts a join debtors d on d.id = a.debtor_id join clients c on c.id = a.client_id join v_balances b on b.account_id = a.id where a.id = $1" },
+      { "title": "Transactions", "sql": "select t.occurred_on as date, t.kind, t.description, c.currency, t.amount_cents from transactions t join accounts a on a.id = t.account_id join clients c on c.id = a.client_id where t.account_id = $1 order by t.occurred_on, t.created_at" }
     ]
   }
 ]

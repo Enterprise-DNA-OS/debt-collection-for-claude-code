@@ -2,12 +2,56 @@
   {
     "name": "week",
     "title": "This week",
-    "subtitle": "Debt Collection for Claude Code: what needs attention, rendered by npm run view",
+    "subtitle": "What needs a person: broken arrangements, trust money, statute dates, disputes, quiet accounts",
     "sections": [
       {
         "title": "Needs attention",
-        "note": "TODO(author): point this at the industry's attention view (overdue, stuck, quiet).",
-        "sql": "select 'replace me' as item, 'TODO(author)' as why"
+        "note": "From v_attention. Days are counted from the date shown; negative means still to come.",
+        "sql": "select ref, owner, item, detail, date, days from v_attention order by days desc nulls last"
+      },
+      {
+        "title": "Contact rule findings",
+        "note": "Each contact checked against docs/compliance.md. Times are the debtor's local time.",
+        "sql": "select ref, owner, to_char(local_at, 'YYYY-MM-DD HH24:MI') as local_time, channel, rule, severity, finding from v_contact_findings order by local_at desc"
+      },
+      {
+        "title": "Open tasks",
+        "sql": "select a.ref, t.title, t.owner, t.due_on from tasks t join accounts a on a.id = t.account_id where t.done_on is null order by t.due_on nulls last"
+      }
+    ]
+  },
+  {
+    "name": "book",
+    "title": "The book",
+    "subtitle": "Every open account by client, with arrangements and limitation dates",
+    "sections": [
+      {
+        "title": "Open accounts",
+        "sql": "select b.client, b.ref, b.debtor, b.state, b.status, b.collector, b.currency, b.balance_cents, b.paid_cents, b.last_tried_on, l.barred_on from v_balances b join v_limitation l on l.account_id = b.account_id where b.status not in ('paid','returned','closed') order by b.client, b.ref"
+      },
+      {
+        "title": "Arrangements",
+        "sql": "select ref, owner, kind, every, instalments, currency, amount_cents, next_due, expected_cents, paid_cents, state from v_arrangements where status = 'active' order by state, next_due"
+      },
+      {
+        "title": "Limitation dates in the next 180 days",
+        "note": "Statute-barred debts: never state or imply legal action (RG 96 part 2 s 20).",
+        "sql": "select ref, debtor, state, status, currency, balance_cents, runs_from, barred_on from v_limitation where balance_cents > 0 and status not in ('paid','returned','closed') and barred_on <= current_date + 180 order by barred_on"
+      }
+    ]
+  },
+  {
+    "name": "money",
+    "title": "Trust and commission",
+    "subtitle": "Money held for each client, commission earned and remittances made",
+    "sections": [
+      {
+        "title": "Held in trust, not yet remitted",
+        "sql": "select client, name, currency, trust_cents, direct_cents, commission_cents, oldest_trust_on, remit_days, last_remitted_on from v_trust order by trust_cents desc"
+      },
+      {
+        "title": "Remittances",
+        "sql": "select r.ref, c.code as client, r.period_to, r.made_on, c.currency, r.trust_cents, r.commission_cents, r.gst_cents, r.net_cents, r.reference from remittances r join clients c on c.id = r.client_id order by r.made_on desc"
       }
     ]
   }
